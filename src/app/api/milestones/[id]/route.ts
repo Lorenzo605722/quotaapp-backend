@@ -14,11 +14,11 @@ const milestoneSchema = z.object({
 // GET /api/milestones/[id] - Get specific milestone
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userId } = requireAuth(request);
-        const { id } = params;
+        const { id } = await params;
 
         const milestone = await prisma.milestone.findFirst({
             where: {
@@ -62,11 +62,11 @@ export async function GET(
 // PUT /api/milestones/[id] - Update milestone
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userId } = requireAuth(request);
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
         const data = milestoneSchema.parse(body);
 
@@ -108,11 +108,11 @@ export async function PUT(
 // DELETE /api/milestones/[id] - Delete milestone
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { userId } = requireAuth(request);
-        const { id } = params;
+        const { id } = await params;
 
         // Check ownership
         const existing = await prisma.milestone.findFirst({
