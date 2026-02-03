@@ -37,13 +37,13 @@ export async function GET(request: NextRequest) {
         ]);
 
         // Calculate statistics
-        const activeMilestones = milestones.filter(m => m.status === 'active').length;
-        const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+        const activeMilestones = milestones.filter((m: any) => m.status === 'active').length;
+        const completedMilestones = milestones.filter((m: any) => m.status === 'completed').length;
 
-        const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const totalExpenses = expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0);
 
         // Expenses by category
-        const expensesByCategory = expenses.reduce((acc, exp) => {
+        const expensesByCategory = expenses.reduce((acc: Record<string, number>, exp: any) => {
             const category = exp.category || 'Other';
             acc[category] = (acc[category] || 0) + exp.amount;
             return acc;
@@ -53,12 +53,12 @@ export async function GET(request: NextRequest) {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const currentMonthExpenses = expenses
-            .filter(exp => exp.date >= startOfMonth)
-            .reduce((sum, exp) => sum + exp.amount, 0);
+            .filter((exp: any) => exp.date >= startOfMonth)
+            .reduce((sum: number, exp: any) => sum + exp.amount, 0);
 
         // Mood average
         const moodAverage = moodEntries.length > 0
-            ? moodEntries.reduce((sum, entry) => sum + entry.score, 0) / moodEntries.length
+            ? moodEntries.reduce((sum: number, entry: any) => sum + entry.score, 0) / moodEntries.length
             : 0;
 
         // Mood trend (last 7 days)
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
             },
             mood: {
                 average: Math.round(moodAverage * 10) / 10,
-                last7Days: last7Days.map(m => ({
+                last7Days: last7Days.map((m: any) => ({
                     date: m.date,
                     score: m.score,
                 })),
