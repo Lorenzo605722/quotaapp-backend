@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
         });
 
         // Calculate total expenses per milestone
-        const milestonesWithTotals = milestones.map(milestone => ({
+        const milestonesWithTotals = milestones.map((milestone: any) => ({
             ...milestone,
-            totalExpenses: milestone.expenses.reduce((sum, exp) => sum + exp.amount, 0),
+            totalExpenses: milestone.expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0),
             expenseCount: milestone.expenses.length,
         }));
 

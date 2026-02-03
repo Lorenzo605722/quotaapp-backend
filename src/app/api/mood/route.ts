@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
         // Calculate average mood
         const average = entries.length > 0
-            ? entries.reduce((sum, entry) => sum + entry.score, 0) / entries.length
+            ? entries.reduce((sum: number, entry: any) => sum + entry.score, 0) / entries.length
             : 0;
 
         return NextResponse.json({

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const total = expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0);
 
         return NextResponse.json({
             expenses,

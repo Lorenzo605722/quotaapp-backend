@@ -41,7 +41,7 @@ export async function GET(
             );
         }
 
-        const totalExpenses = milestone.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const totalExpenses = milestone.expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0);
 
         return NextResponse.json({
             milestone: {
