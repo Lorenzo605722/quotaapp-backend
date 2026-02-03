@@ -1,0 +1,121 @@
+// QuotaApp Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User Authentication & Profile
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  milestones    Milestone[]
+  expenses      Expense[]
+  calendar      CalendarEntry[]
+  moodData      MoodEntry[]
+  salaryInfo    SalaryInfo?
+
+  @@map("users")
+}
+
+// Milestones (Obiettivi)
+model Milestone {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  targetDate  DateTime?
+  category    String?
+  status      String   @default("active") // active, completed, archived
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses    Expense[]
+
+  @@map("milestones")
+  @@index([userId])
+}
+
+// Expenses (Spese)
+model Expense {
+  id          String    @id @default(cuid())
+  userId      String
+  milestoneId String?
+  amount      Float
+  description String?
+  date        DateTime
+  category    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone   Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  @@map("expenses")
+  @@index([userId])
+  @@index([milestoneId])
+  @@index([date])
+}
+
+// Calendar Entries
+model CalendarEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @unique
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("calendar_entries")
+  @@index([userId])
+  @@index([date])
+}
+
+// Mood Tracking
+model MoodEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime
+  score           Int      // 1-10
+  emotionalInsight String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("mood_entries")
+  @@index([userId])
+  @@index([date])
+  @@unique([userId, date])
+}
+
+// Salary Information
+model SalaryInfo {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  monthlyAmount Float
+  bonusData    Json?    // For flexible bonus structure
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("salary_info")
+}
