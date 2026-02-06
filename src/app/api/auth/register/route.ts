@@ -3,17 +3,20 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/password';
 import { signToken, generateVerificationToken } from '@/lib/jwt';
+import { sendVerificationEmail } from '@/lib/email';
 
 const registerSchema = z.object({
     email: z.string().email('Invalid email format'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    name: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    birthDate: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { email, password, name } = registerSchema.parse(body);
+        const { email, password, firstName, lastName, birthDate } = registerSchema.parse(body);
 
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
         if (existingUser) {
             return NextResponse.json(
                 { error: 'Email already registered' },
-                { status: 400 }
+                { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
             );
         }
 
@@ -35,47 +38,54 @@ export async function POST(request: NextRequest) {
             data: {
                 email,
                 passwordHash,
-                name,
-                emailVerified: false,
+                firstName,
+                lastName,
+                birthDate,
             },
         });
-
-        // Generate verification token
-        const verificationToken = generateVerificationToken(user.id);
-
-        // TODO: Send verification email
-        // For now, we'll just return the token in response (dev only)
 
         // Generate auth token
         const token = signToken({ userId: user.id, email: user.email });
 
+        // Generate verification token (24h)
+        const verificationToken = generateVerificationToken(user.id);
+
+        // Send verification email
+        const emailResult = await sendVerificationEmail(user.email, verificationToken);
+        console.log('Verification email result:', emailResult);
+
         return NextResponse.json(
             {
-                message: 'User registered successfully',
+                message: 'User registered successfully. Please check your email for verification link.',
                 token,
                 user: {
                     id: user.id,
                     email: user.email,
-                    name: user.name,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
                     emailVerified: user.emailVerified,
                 },
-                // Development only - remove in production
-                verificationToken,
             },
-            { status: 201 }
+            {
+                status: 201,
+                headers: { 'Access-Control-Allow-Origin': '*' }
+            }
         );
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
                 { error: 'Validation error', details: error.issues },
-                { status: 400 }
+                { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } }
             );
         }
 
         console.error('Registration error:', error);
         return NextResponse.json(
             { error: 'Internal server error' },
-            { status: 500 }
+            {
+                status: 500,
+                headers: { 'Access-Control-Allow-Origin': '*' }
+            }
         );
     }
 }

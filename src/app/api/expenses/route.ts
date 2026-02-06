@@ -9,6 +9,9 @@ const expenseSchema = z.object({
     date: z.string().transform(val => new Date(val)),
     category: z.string().optional(),
     milestoneId: z.string().optional(),
+    isEssential: z.boolean().optional().default(true),
+    note: z.string().optional(),
+    emotion: z.string().optional(),
 });
 
 // GET /api/expenses - List all user expenses
@@ -20,6 +23,7 @@ export async function GET(request: NextRequest) {
         const category = searchParams.get('category');
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
+        const isEssential = searchParams.get('isEssential');
 
         const where: any = { userId };
 
@@ -29,6 +33,10 @@ export async function GET(request: NextRequest) {
 
         if (category) {
             where.category = category;
+        }
+
+        if (isEssential !== null) {
+            where.isEssential = isEssential === 'true';
         }
 
         if (startDate || endDate) {

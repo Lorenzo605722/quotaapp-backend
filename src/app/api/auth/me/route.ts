@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
             select: {
                 id: true,
                 email: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 emailVerified: true,
                 createdAt: true,
             },
@@ -24,7 +25,12 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        return NextResponse.json({ user });
+        const userWithVirtualName = {
+            ...user,
+            name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email,
+        };
+
+        return NextResponse.json({ user: userWithVirtualName });
     } catch (error) {
         if (error instanceof Error && error.message === 'Unauthorized') {
             return NextResponse.json(

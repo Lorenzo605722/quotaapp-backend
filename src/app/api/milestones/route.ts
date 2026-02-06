@@ -6,9 +6,17 @@ import { requireAuth } from '@/lib/auth';
 const milestoneSchema = z.object({
     title: z.string().min(1, 'Title is required'),
     description: z.string().optional(),
+    targetAmount: z.number().optional().default(0),
+    currentAmount: z.number().optional().default(0),
+    startDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
     targetDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
     category: z.string().optional(),
     status: z.enum(['active', 'completed', 'archived']).optional().default('active'),
+    salarySnapshot: z.any().optional(),
+    modelSnapshot: z.any().optional(),
+    plan: z.any().optional(),
+    celebrationsHalfShown: z.boolean().optional().default(false),
+    celebrationsDoneShown: z.boolean().optional().default(false),
 });
 
 // GET /api/milestones - List all user milestones
@@ -25,18 +33,30 @@ export async function GET(request: NextRequest) {
                         amount: true,
                     },
                 },
+                contributions: {
+                    select: {
+                        amount: true
+                    }
+                }
             },
             orderBy: {
                 createdAt: 'desc',
             },
         });
 
-        // Calculate total expenses per milestone
-        const milestonesWithTotals = milestones.map((milestone: any) => ({
-            ...milestone,
-            totalExpenses: milestone.expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0),
-            expenseCount: milestone.expenses.length,
-        }));
+        // Calculate total expenses and contributions per milestone
+        const milestonesWithTotals = milestones.map((milestone: any) => {
+            const totalExpenses = milestone.expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0);
+            const totalContributions = milestone.contributions.reduce((sum: number, c: any) => sum + c.amount, 0);
+            return {
+                ...milestone,
+                totalExpenses,
+                totalContributions,
+                expenseCount: milestone.expenses.length,
+                // currentAmount can be the sum of contributions + initial if desired, 
+                // but let's stick to what's stored or calculated.
+            };
+        });
 
         return NextResponse.json({ milestones: milestonesWithTotals });
     } catch (error) {

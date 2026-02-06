@@ -6,9 +6,17 @@ import { requireAuth } from '@/lib/auth';
 const milestoneSchema = z.object({
     title: z.string().min(1, 'Title is required').optional(),
     description: z.string().optional(),
+    targetAmount: z.number().optional(),
+    currentAmount: z.number().optional(),
+    startDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
     targetDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
     category: z.string().optional(),
     status: z.enum(['active', 'completed', 'archived']).optional(),
+    salarySnapshot: z.any().optional(),
+    modelSnapshot: z.any().optional(),
+    plan: z.any().optional(),
+    celebrationsHalfShown: z.boolean().optional(),
+    celebrationsDoneShown: z.boolean().optional(),
 });
 
 // GET /api/milestones/[id] - Get specific milestone
@@ -31,6 +39,11 @@ export async function GET(
                         date: 'desc',
                     },
                 },
+                contributions: {
+                    orderBy: {
+                        monthKey: 'desc'
+                    }
+                }
             },
         });
 
@@ -42,11 +55,13 @@ export async function GET(
         }
 
         const totalExpenses = milestone.expenses.reduce((sum: number, exp: any) => sum + exp.amount, 0);
+        const totalContributions = milestone.contributions.reduce((sum: number, c: any) => sum + c.amount, 0);
 
         return NextResponse.json({
             milestone: {
                 ...milestone,
                 totalExpenses,
+                totalContributions
             },
         });
     } catch (error) {
